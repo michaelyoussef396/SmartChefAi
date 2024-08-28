@@ -13,6 +13,8 @@ from models import User, db
 
 # Views go here!
 
+
+
 @app.route('/')
 def index():
     return '<h1>Project Server</h1>'
