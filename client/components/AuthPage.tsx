@@ -19,7 +19,7 @@ const LabelInputContainer = ({
 };
 
 export function AuthPage() {
-  const [isLogin, setIsLogin] = useState(false);
+  const [isLogin, setIsLogin] = useState(false); // Default to sign-up mode
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
@@ -29,16 +29,21 @@ export function AuthPage() {
     setSuccess("");
 
     const formData = new FormData(e.currentTarget);
-    const data = {
-      first_name: formData.get("firstName"),
-      last_name: formData.get("lastName"),
-      email: formData.get("email"),
-      password: formData.get("password"),
-    };
+    const data = isLogin
+      ? {
+          email: formData.get("email"),
+          password: formData.get("password"),
+        }
+      : {
+          first_name: formData.get("firstName"),
+          last_name: formData.get("lastName"),
+          email: formData.get("email"),
+          password: formData.get("password"),
+        };
 
     try {
       const response = await fetch(
-        isLogin ? "/login" : "http://127.0.0.1:5555/register",
+        isLogin ? "http://127.0.0.1:5555/login" : "http://127.0.0.1:5555/register",
         {
           method: "POST",
           headers: {
@@ -53,9 +58,10 @@ export function AuthPage() {
         console.log("Success:", result);
         if (isLogin) {
           setSuccess("Logged in successfully!");
+          // Handle redirection or other logic here
         } else {
           setSuccess("Registration successful! Please log in.");
-          setIsLogin(true);
+          setIsLogin(true); // Switch to login mode after successful registration
         }
       } else {
         const errorData = await response.json();
@@ -77,7 +83,7 @@ export function AuthPage() {
   return (
     <div className="max-w-md w-full mx-auto rounded-none md:rounded-2xl p-4 md:p-6 shadow-lg bg-white/80 backdrop-blur-sm">
       <h2 className="font-bold text-2xl text-neutral-800 mb-2">
-        Welcome to SmartChefAI
+        {isLogin ? "Log In" : "Sign Up"} to SmartChefAI
       </h2>
       <p className="text-neutral-600 text-sm mb-4">
         {isLogin
@@ -98,6 +104,14 @@ export function AuthPage() {
                 <Input id="lastName" name="lastName" placeholder="Doe" type="text" required />
               </LabelInputContainer>
             </div>
+            <LabelInputContainer>
+              <Label htmlFor="email">Email Address</Label>
+              <Input id="email" name="email" placeholder="john@example.com" type="email" required />
+            </LabelInputContainer>
+          </>
+        )}
+        {isLogin && (
+          <>
             <LabelInputContainer>
               <Label htmlFor="email">Email Address</Label>
               <Input id="email" name="email" placeholder="john@example.com" type="email" required />
