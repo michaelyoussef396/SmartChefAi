@@ -7,18 +7,58 @@ import { cn } from "@/lib/utils";
 export function AuthPage() {
   const [isLogin, setIsLogin] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log("Form submitted");
-    // Add your authentication logic here
-    // For demonstration, we'll just set an error
-    setError("Invalid credentials. Please try again.");
+    setError("");
+    setSuccess("");
+
+    const formData = new FormData(e.currentTarget);
+    const data = {
+      first_name: formData.get("firstName"),
+      last_name: formData.get("lastName"),
+      email: formData.get("email"),
+      password: formData.get("password"),
+    };
+
+    try {
+      const response = await fetch(
+        isLogin ? "/login" : "http://127.0.0.1:5555/register",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(data),
+        }
+      );
+
+      if (response.ok) {
+        const result = await response.json();
+        if (isLogin) {
+          // Handle successful login
+          setSuccess("Logged in successfully!");
+          // Redirect to a different page or do something else
+        } else {
+          // Handle successful registration
+          setSuccess("Registration successful! Please log in.");
+          // Optionally, you can automatically switch to login mode after successful registration
+          setIsLogin(true);
+        }
+      } else {
+        const errorData = await response.json();
+        setError(errorData.error || "An error occurred. Please try again.");
+      }
+    } catch (err) {
+      setError("An error occurred. Please try again.");
+    }
   };
 
   const toggleAuthMode = () => {
     setIsLogin(!isLogin);
     setError("");
+    setSuccess("");
   };
 
   return (
@@ -38,35 +78,26 @@ export function AuthPage() {
             <div className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
               <LabelInputContainer className="flex-1">
                 <Label htmlFor="firstName">First Name</Label>
-                <Input id="firstName" placeholder="John" type="text" />
+                <Input id="firstName" name="firstName" placeholder="John" type="text" required />
               </LabelInputContainer>
               <LabelInputContainer className="flex-1">
                 <Label htmlFor="lastName">Last Name</Label>
-                <Input id="lastName" placeholder="Doe" type="text" />
+                <Input id="lastName" name="lastName" placeholder="Doe" type="text" required />
               </LabelInputContainer>
             </div>
             <LabelInputContainer>
-              <Label htmlFor="username">Username</Label>
-              <Input id="username" placeholder="johndoe" type="text" />
-            </LabelInputContainer>
-            <LabelInputContainer>
               <Label htmlFor="email">Email Address</Label>
-              <Input id="email" placeholder="john@example.com" type="email" />
+              <Input id="email" name="email" placeholder="john@example.com" type="email" required />
             </LabelInputContainer>
           </>
         )}
-        {isLogin && (
-          <LabelInputContainer>
-            <Label htmlFor="login-username">Username</Label>
-            <Input id="login-username" placeholder="johndoe" type="text" />
-          </LabelInputContainer>
-        )}
         <LabelInputContainer>
           <Label htmlFor="password">Password</Label>
-          <Input id="password" placeholder="••••••••" type="password" />
+          <Input id="password" name="password" placeholder="••••••••" type="password" required />
         </LabelInputContainer>
 
         {error && <p className="text-red-500 text-sm">{error}</p>}
+        {success && <p className="text-green-500 text-sm">{success}</p>}
 
         <button
           className="bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 text-white w-full py-2 rounded-md font-medium shadow-md transition duration-300 ease-in-out transform hover:scale-105"

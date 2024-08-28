@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # Standard library imports
-from uuid import uuid4
+# No need to import uuid4 anymore
 
 # Remote library imports
 from flask import request, jsonify, session
@@ -33,11 +33,10 @@ def register_user():
 
     hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
     new_user = User(
-        id=uuid4().hex,
         first_name=first_name,
         last_name=last_name,
         email=email,
-        password=hashed_password
+        password=password  # Let the model handle the hashing
     )
 
     try:
@@ -52,6 +51,7 @@ def register_user():
         }), 201
     except Exception as e:
         db.session.rollback()
+        print(f"Error: {e}")  # Print the error to the console
         return jsonify({"error": "An error occurred while registering the user"}), 500
 
 @app.route('/')

@@ -1,16 +1,12 @@
 from sqlalchemy_serializer import SerializerMixin
 from sqlalchemy.ext.associationproxy import association_proxy
-from uuid import uuid4
 from config import db
 from werkzeug.security import generate_password_hash, check_password_hash
-
-def get_uuid():
-    return uuid4().hex
 
 class User(db.Model, SerializerMixin):
     __tablename__ = 'users'
     
-    id = db.Column(db.String(32), primary_key=True, unique=True, default=get_uuid)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     first_name = db.Column(db.String(100), nullable=False)
     last_name = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(345), unique=True, nullable=False)
