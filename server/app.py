@@ -54,6 +54,34 @@ def register_user():
         print(f"Error: {e}")  # Print the error to the console
         return jsonify({"error": "An error occurred while registering the user"}), 500
 
+@app.route("/login", methods=["POST"])
+def login_user():
+    data = request.json
+    email = data.get("email")
+    password = data.get("password")
+
+    # Find the user by email
+    user = User.query.filter_by(email=email).first()
+
+    # Check if the user exists
+    if user is None:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    # Verify the password
+    if not user.verify_password(password):
+        return jsonify({"error": "Unauthorized"}), 401
+    
+    # Set the user ID in the session
+    session["user_id"] = user.id
+
+    # Return the user data (excluding sensitive information)
+    return jsonify({
+        "id": user.id,
+        "first_name": user.first_name,
+        "last_name": user.last_name,
+        "email": user.email
+    }), 200
+
 @app.route('/')
 def index():
     return '<h1>Project Server</h1>'
