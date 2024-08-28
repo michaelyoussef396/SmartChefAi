@@ -22,7 +22,7 @@ def register_user():
     first_name = data.get("first_name")
     last_name = data.get("last_name")
     email = data.get("email")
-    password = data.get("password")
+    password = data.get("password")  # Directly use the plaintext password
 
     if not all([first_name, last_name, email, password]):
         return jsonify({"error": "All fields are required"}), 400
@@ -31,12 +31,12 @@ def register_user():
     if user_exists:
         return jsonify({"error": "User already exists"}), 409
 
-    hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
+    # No hashing here, store the password as plaintext (not recommended for production)
     new_user = User(
         first_name=first_name,
         last_name=last_name,
         email=email,
-        password=password  # Let the model handle the hashing
+        password=password  # Store the plaintext password
     )
 
     try:
@@ -60,25 +60,18 @@ def login_user():
     email = data.get("email")
     password = data.get("password")
 
-    # Find the user by email
     user = User.query.filter_by(email=email).first()
 
-    # Check if the user exists
     if user is None:
         return jsonify({"error": "Unauthorized"}), 401
 
-    # Verify the password
     if not user.verify_password(password):
         return jsonify({"error": "Unauthorized"}), 401
-    
-    # Set the user ID in the session
+
     session["user_id"] = user.id
 
-    # Return the user data (excluding sensitive information)
     return jsonify({
         "id": user.id,
-        "first_name": user.first_name,
-        "last_name": user.last_name,
         "email": user.email
     }), 200
 

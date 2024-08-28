@@ -21,56 +21,32 @@ const LabelInputContainer = ({
 export function AuthPage() {
   const [isLogin, setIsLogin] = useState(false); // Default to sign-up mode
   const [error, setError] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [success, setSuccess] = useState("");
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setError("");
-    setSuccess("");
-
-    const formData = new FormData(e.currentTarget);
-    const data = isLogin
-      ? {
-          email: formData.get("email"),
-          password: formData.get("password"),
-        }
-      : {
-          first_name: formData.get("firstName"),
-          last_name: formData.get("lastName"),
-          email: formData.get("email"),
-          password: formData.get("password"),
-        };
-
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
     try {
-      const response = await fetch(
-        isLogin ? "http://127.0.0.1:5555/login" : "http://127.0.0.1:5555/register",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(data),
-        }
-      );
+      const response = await fetch("http://127.0.0.1:5555/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      });
 
-      if (response.ok) {
-        const result = await response.json();
-        console.log("Success:", result);
-        if (isLogin) {
-          setSuccess("Logged in successfully!");
-          // Handle redirection or other logic here
-        } else {
-          setSuccess("Registration successful! Please log in.");
-          setIsLogin(true); // Switch to login mode after successful registration
-        }
-      } else {
+      if (!response.ok) {
         const errorData = await response.json();
-        console.log("Error:", errorData);
-        setError(errorData.error || "An error occurred. Please try again.");
+        setError(errorData.error);
+        return;
       }
-    } catch (err) {
-      console.error("Fetch error:", err);
-      setError("An error occurred. Please try again.");
+
+      const data = await response.json();
+      console.log("Login successful:", data);
+    } catch (error) {
+      console.error("Error:", error);
+      setError("An unexpected error occurred.");
     }
   };
 
@@ -114,13 +90,13 @@ export function AuthPage() {
           <>
             <LabelInputContainer>
               <Label htmlFor="email">Email Address</Label>
-              <Input id="email" name="email" placeholder="john@example.com" type="email" required />
+              <Input id="email" name="email" placeholder="john@example.com" type="email" required onChange={(e) => setEmail(e.target.value)} />
             </LabelInputContainer>
           </>
         )}
         <LabelInputContainer>
           <Label htmlFor="password">Password</Label>
-          <Input id="password" name="password" placeholder="••••••••" type="password" required />
+          <Input id="password" name="password" placeholder="••••••••" type="password" required onChange={(e) => setPassword(e.target.value)} />
         </LabelInputContainer>
 
         {error && <p className="text-red-500 text-sm">{error}</p>}

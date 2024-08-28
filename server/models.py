@@ -1,7 +1,5 @@
 from sqlalchemy_serializer import SerializerMixin
-from sqlalchemy.ext.associationproxy import association_proxy
 from config import db
-from werkzeug.security import generate_password_hash, check_password_hash
 
 class User(db.Model, SerializerMixin):
     __tablename__ = 'users'
@@ -14,13 +12,13 @@ class User(db.Model, SerializerMixin):
 
     @property
     def password(self):
-        raise AttributeError('Password is not a readable attribute')
+        return self._password
 
     @password.setter
     def password(self, password):
-        self._password = generate_password_hash(password)
+        self._password = password
 
     def verify_password(self, password):
-        return check_password_hash(self._password, password)
+        return self._password == password
 
     serialize_rules = ('-_password',)
