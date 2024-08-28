@@ -4,6 +4,20 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
+const LabelInputContainer = ({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) => {
+  return (
+    <div className={cn("flex flex-col w-full", className)}>
+      {children}
+    </div>
+  );
+};
+
 export function AuthPage() {
   const [isLogin, setIsLogin] = useState(false);
   const [error, setError] = useState("");
@@ -36,21 +50,20 @@ export function AuthPage() {
 
       if (response.ok) {
         const result = await response.json();
+        console.log("Success:", result);
         if (isLogin) {
-          // Handle successful login
           setSuccess("Logged in successfully!");
-          // Redirect to a different page or do something else
         } else {
-          // Handle successful registration
           setSuccess("Registration successful! Please log in.");
-          // Optionally, you can automatically switch to login mode after successful registration
           setIsLogin(true);
         }
       } else {
         const errorData = await response.json();
+        console.log("Error:", errorData);
         setError(errorData.error || "An error occurred. Please try again.");
       }
     } catch (err) {
+      console.error("Fetch error:", err);
       setError("An error occurred. Please try again.");
     }
   };
@@ -118,17 +131,3 @@ export function AuthPage() {
     </div>
   );
 }
-
-const LabelInputContainer = ({
-  children,
-  className,
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) => {
-  return (
-    <div className={cn("flex flex-col w-full", className)}>
-      {children}
-    </div>
-  );
-};
