@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 # Standard library imports
-# No need to import uuid4 anymore
 
 # Remote library imports
 from flask import request, jsonify, session
@@ -10,7 +9,7 @@ from flask_bcrypt import Bcrypt
 
 # Local imports
 from config import app, db, api
-from models import User
+from models import User, Recipe  # Import models
 
 # Initialize Bcrypt
 bcrypt = Bcrypt(app)
@@ -31,7 +30,6 @@ def register_user():
     if user_exists:
         return jsonify({"error": "User already exists"}), 409
 
-    # No hashing here, store the password as plaintext (not recommended for production)
     new_user = User(
         first_name=first_name,
         last_name=last_name,
