@@ -9,7 +9,7 @@ from flask_bcrypt import Bcrypt
 
 # Local imports
 from config import app, db, api
-from models import User, Recipe  # Import models
+from models import User, Recipe, Ingredient, Category  # Import models
 
 # Initialize Bcrypt
 bcrypt = Bcrypt(app)
@@ -72,6 +72,68 @@ def login_user():
         "id": user.id,
         "email": user.email
     }), 200
+
+@app.route("/recipes", methods=["POST"])
+def create_recipe():
+    if 'user_id' not in session:
+        return jsonify({"error": "Unauthorized"}), 401
+    
+    data = request.json
+    title = data.get("title")
+    description = data.get("description")
+    instructions = data.get("instructions")
+    ingredients = data.get("ingredients")
+    categories = data.get("categories")
+
+    if not all([title, instructions, ingredients]):
+        return jsonify({"error": "Title, instructions, and ingredients are required."}), 400
+
+    try:
+        # Create new recipe
+        new_recipe = Recipe(
+            title=title,
+            description=description,
+            instructions=instructions,
+            user_id=session['user_id']
+        )
+        db.session.add(new_recipe)
+        db.session.commit()  # Commit to generate recipe ID
+
+        # Add ingredients
+        for ingredient_data in ingredients:
+            ingredient = Ingredient(
+                name=ingredient_data["name"],
+                quantity=ingredient_data["quantity"],
+                recipe_id=new_recipe.id
+            )
+            db.session.add(ingredient)
+
+        # Add categories (if provided)
+        if categories:
+            for category_name in categories:
+                category = Category.query.filter_by(name=category_name).first()
+                if not category:
+                    category = Category(name=category_name)
+                    db.session.add(category)
+                    db.session.commit()
+                
+                new_recipe.categories.append(category)
+
+        db.session.commit()  # Final commit to save all changes
+
+        return jsonify({
+            "id": new_recipe.id,
+            "title": new_recipe.title,
+            "description": new_recipe.description,
+            "instructions": new_recipe.instructions,
+            "ingredients": [{"name": ing.name, "quantity": ing.quantity} for ing in new_recipe.ingredients],
+            "categories": [cat.name for cat in new_recipe.categories]
+        }), 201
+
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error: {e}")
+        return jsonify({"error": "An error occurred while creating the recipe."}), 500
 
 @app.route('/')
 def index():
