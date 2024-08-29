@@ -1,4 +1,5 @@
 "use client";
+import { useRouter } from "next/navigation";
 import { Tabs } from "@/components/ui/tabs";
 import { ParallaxScroll } from "@/components/ui/parallax-scroll";
 import { BackgroundGradient } from "@/components/ui/background-gradient";
@@ -51,6 +52,18 @@ const tabContent = [
 ];
 
 export default function HomePage() {
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    try {
+      // Perform any logout-related logic here (e.g., clearing session, cookies, etc.)
+      // For demonstration purposes, we are simply redirecting to the login page
+      router.push("/login");
+    } catch (error) {
+      console.error("Error logging out:", error);
+    }
+  };
+
   return (
     <div className="relative w-full h-full">
       {/* Logo and Site Name */}
@@ -63,6 +76,16 @@ export default function HomePage() {
           className="object-contain"
         />
         <span className="text-2xl font-bold text-white">Smart Chef AI</span>
+      </div>
+
+      {/* Logout Button */}
+      <div className="absolute top-4 right-4">
+        <button
+          onClick={handleLogout}
+          className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded"
+        >
+          Logout
+        </button>
       </div>
 
       {/* Tabs Component */}

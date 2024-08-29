@@ -51,7 +51,7 @@ class Recipe(db.Model, SerializerMixin):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     
     # Many-to-many relationship with Category
-    categories = db.relationship('Category', secondary=association_table, backref=db.backref('recipes', lazy=True))
+    categories = db.relationship('Category', secondary=association_table, backref='recipes_in_category')
 
     serialize_rules = ('-user', '-ingredients', '-categories', '-instructions')  # Exclude user, ingredients, categories, and instructions from serialization
 
@@ -74,6 +74,6 @@ class Category(db.Model, SerializerMixin):
     name = db.Column(db.String(255), nullable=False)
     
     # Many-to-many relationship with Recipe through association table
-    recipes = db.relationship('Recipe', secondary=association_table, backref=db.backref('categories', lazy=True))
+    recipes = db.relationship('Recipe', secondary=association_table, backref='categories_for_recipe')
 
     serialize_rules = ('-recipes',)
