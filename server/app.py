@@ -134,6 +134,28 @@ def create_recipe():
         db.session.rollback()
         print(f"Error: {e}")
         return jsonify({"error": "An error occurred while creating the recipe."}), 500
+    
+
+@app.route("/recipes", methods=["GET"])
+def get_recipes():
+    try:
+        recipes = Recipe.query.all()
+        return jsonify([
+            {
+                "id": recipe.id,
+                "title": recipe.title,
+                "description": recipe.description,
+                "instructions": recipe.instructions,
+                "ingredients": [{"name": ing.name, "quantity": ing.quantity} for ing in recipe.ingredients],
+                "categories": [cat.name for cat in recipe.categories]
+            } for recipe in recipes
+        ]), 200
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify({"error": "An error occurred while retrieving recipes."}), 500
+
+
+
 
 @app.route('/')
 def index():
