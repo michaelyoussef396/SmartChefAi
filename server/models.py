@@ -67,4 +67,13 @@ class Ingredient(db.Model, SerializerMixin):
 
     serialize_rules = ('-recipe',)
 
+class Category(db.Model, SerializerMixin):
+    __tablename__ = 'categories'
+    
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    name = db.Column(db.String(255), nullable=False)
+    
+    # Many-to-many relationship with Recipe through association table
+    recipes = db.relationship('Recipe', secondary=association_table, backref=db.backref('categories', lazy=True))
 
+    serialize_rules = ('-recipes',)
