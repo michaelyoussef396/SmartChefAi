@@ -245,6 +245,57 @@ def update_recipe(recipe_id):
         print(f"Error: {e}")
         return jsonify({"error": "An error occurred while updating the recipe."}), 500
 
+@app.route("/recipes/<int:recipe_id>", methods=["DELETE"])
+def delete_recipe(recipe_id):
+    if 'user_id' not in session:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    try:
+        recipe = Recipe.query.get(recipe_id)
+        if not recipe:
+            return jsonify({"error": "Recipe not found."}), 404
+
+        # Ensure the current user is the owner of the recipe
+        if recipe.user_id != session['user_id']:
+            return jsonify({"error": "Unauthorized to delete this recipe."}), 403
+
+        db.session.delete(recipe)
+        db.session.commit()
+
+        return jsonify({"message": "Recipe deleted successfully."}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error: {e}")
+        return jsonify({"error": "An error occurred while deleting the recipe."}), 500
+
+@app.route("/categories", methods=["POST"])
+def create_category():
+    data = request.json
+    name = data.get("name")
+
+    if not name:
+        return jsonify({"error": "Category name is required."}), 400
+
+    category_exists = Category.query.filter_by(name=name).first()
+    if category_exists:
+        return jsonify({"error": "Category already exists."}), 409
+
+    try:
+        new_category = Category(name=name)
+        db.session.add(new_category)
+        db.session.commit()
+
+        return jsonify({
+            "id": new_category.id,
+            "name": new_category.name
+        }), 201
+
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error: {e}")
+        return jsonify({"error": "An error occurred while creating the category."}), 500
+
 @app.route('/')
 def index():
     return '<h1>Project Server</h1>'
