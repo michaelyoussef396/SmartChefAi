@@ -44,6 +44,10 @@ export function LoginPage() {
       const data = await response.json();
       console.log("Login successful:", data);
       setSuccess("Logged in successfully!");
+
+      // Redirect to the home page using window.location.href
+      window.location.href = '/';  // Redirect to the home page
+
     } catch (error) {
       console.error("Error:", error);
       setError("An unexpected error occurred.");

@@ -6,3 +6,13 @@ body {
   background: radial-gradient(circle, #3F5EFB, #9653B9, #FC446B);
   min-height: 100vh;
 }
+
+.no-visible-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
+}
+ 
+.no-visible-scrollbar::-webkit-scrollbar {
+  display: none;
+}
