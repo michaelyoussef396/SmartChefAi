@@ -155,6 +155,24 @@ def get_recipes():
         return jsonify({"error": "An error occurred while retrieving recipes."}), 500
 
 
+@app.route("/recipes/<int:recipe_id>", methods=["GET"])
+def get_recipe(recipe_id):
+    try:
+        recipe = Recipe.query.get(recipe_id)
+        if not recipe:
+            return jsonify({"error": "Recipe not found."}), 404
+
+        return jsonify({
+            "id": recipe.id,
+            "title": recipe.title,
+            "description": recipe.description,
+            "instructions": recipe.instructions,
+            "ingredients": [{"name": ing.name, "quantity": ing.quantity} for ing in recipe.ingredients],
+            "categories": [cat.name for cat in recipe.categories]
+        }), 200
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify({"error": "An error occurred while retrieving the recipe."}), 500
 
 
 @app.route('/')
