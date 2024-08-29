@@ -55,3 +55,16 @@ class Recipe(db.Model, SerializerMixin):
 
     serialize_rules = ('-user', '-ingredients', '-categories', '-instructions')  # Exclude user, ingredients, categories, and instructions from serialization
 
+class Ingredient(db.Model, SerializerMixin):
+    __tablename__ = 'ingredients'
+    
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    name = db.Column(db.String(255), nullable=False)
+    quantity = db.Column(db.String(100), nullable=False)
+    
+    # Foreign Key to link to the Recipe model
+    recipe_id = db.Column(db.Integer, db.ForeignKey('recipes.id'), nullable=False)
+
+    serialize_rules = ('-recipe',)
+
+
