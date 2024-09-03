@@ -6,7 +6,6 @@ import os
 from flask import request, jsonify, session
 from flask_restful import Resource
 from flask_bcrypt import Bcrypt
-from werkzeug.utils import secure_filename
 # Local imports
 from config import app, db, api
 from models import User, Recipe, Ingredient, Category  # Import models
@@ -91,13 +90,6 @@ def create_recipe():
             quantity = request.form.get(f"ingredients[{index}][quantity]")
             ingredients.append({"name": name, "quantity": quantity})
 
-    # Handle image upload
-    if image:
-        filename = secure_filename(image.filename)
-        image_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        image.save(image_path)
-    else:
-        filename = None
 
     try:
         # Create new recipe
@@ -105,7 +97,6 @@ def create_recipe():
             title=title,
             description=description,
             instructions=instructions,
-            image=filename  # Store the filename in the recipe
         )
         db.session.add(new_recipe)
         db.session.commit()
@@ -141,7 +132,6 @@ def create_recipe():
             "instructions": new_recipe.instructions,
             "ingredients": [{"name": ing.name, "quantity": ing.quantity} for ing in new_recipe.ingredients],
             "categories": [cat.name for cat in new_recipe.categories],
-            "image": filename
         }), 201
 
     except Exception as e:

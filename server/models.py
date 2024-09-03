@@ -35,7 +35,6 @@ class Recipe(db.Model, SerializerMixin):
     
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     title = db.Column(db.String(255), nullable=False)
-    image = db.Column(db.String(255), nullable=True)
     description = db.Column(db.Text, nullable=True)
     
     ingredients = db.relationship('Ingredient', backref='recipe', lazy=True)
