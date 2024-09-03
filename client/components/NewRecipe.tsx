@@ -1,6 +1,19 @@
 "use client";
-import { useState } from "react";
+import React, { useState } from "react";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
+
+const LabelInputContainer = ({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) => {
+  return <div className={cn("flex flex-col w-full", className)}>{children}</div>;
+};
 
 export default function NewRecipe() {
   const [title, setTitle] = useState("");
@@ -8,7 +21,7 @@ export default function NewRecipe() {
   const [instructions, setInstructions] = useState("");
   const [categories, setCategories] = useState("");
   const [ingredients, setIngredients] = useState([{ name: "", quantity: "" }]);
-  const [image, setImage] = useState<File | null>(null);  // New state for image
+  const [image, setImage] = useState<File | null>(null);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const router = useRouter();
@@ -42,7 +55,7 @@ export default function NewRecipe() {
       formData.append(`ingredients[${index}][quantity]`, ingredient.quantity);
     });
     if (image) {
-      formData.append("image", image);  // Attach image if available
+      formData.append("image", image);
     }
 
     try {
@@ -68,85 +81,75 @@ export default function NewRecipe() {
   };
 
   return (
-    <div className="max-w-md w-full mx-auto mt-20 p-4 shadow-lg bg-white rounded-lg">
-      <h2 className="text-2xl font-bold mb-4">Create a New Recipe</h2>
+    <div className="max-w-md w-full mx-auto rounded-none md:rounded-2xl p-4 md:p-6 shadow-lg bg-white/80 backdrop-blur-sm">
+      <h2 className="font-bold text-2xl text-neutral-800 mb-2">Create a New Recipe</h2>
+      <p className="text-neutral-600 text-sm mb-4">Fill out the form below to add a new recipe to your collection.</p>
 
-      {error && <p className="text-red-500">{error}</p>}
-      {success && <p className="text-green-500">{success}</p>}
-
-      <form onSubmit={handleSubmit} encType="multipart/form-data">
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700">
-            Recipe Title
-          </label>
-          <input
+      <form className="space-y-4" onSubmit={handleSubmit} encType="multipart/form-data">
+        <LabelInputContainer>
+          <Label htmlFor="title">Recipe Title</Label>
+          <Input
+            id="title"
+            name="title"
+            placeholder="Recipe Title"
             type="text"
-            value={title}
+            className="mt-1 block w-full px-3 py-2 border rounded-md bg-white" // Ensure white background
+            required
             onChange={(e) => setTitle(e.target.value)}
-            className="mt-1 block w-full px-3 py-2 border rounded-md"
-            required
           />
-        </div>
+        </LabelInputContainer>
 
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700">
-            Description
-          </label>
+        <LabelInputContainer>
+          <Label htmlFor="description">Description</Label>
           <textarea
-            value={description}
+            id="description"
+            name="description"
+            placeholder="Describe the recipe"
+            className="mt-1 block w-full px-3 py-2 border rounded-md bg-white" // Ensure white background
             onChange={(e) => setDescription(e.target.value)}
-            className="mt-1 block w-full px-3 py-2 border rounded-md"
           />
-        </div>
+        </LabelInputContainer>
 
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700">
-            Instructions (Separate steps by new line)
-          </label>
+        <LabelInputContainer>
+          <Label htmlFor="instructions">Instructions (Separate steps by new line)</Label>
           <textarea
-            value={instructions}
+            id="instructions"
+            name="instructions"
+            placeholder="Step 1: ..."
+            className="mt-1 block w-full px-3 py-2 border rounded-md bg-white" // Ensure white background
             onChange={(e) => setInstructions(e.target.value)}
-            className="mt-1 block w-full px-3 py-2 border rounded-md"
             required
           />
-        </div>
+        </LabelInputContainer>
 
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700">
-            Categories (Separate by commas)
-          </label>
-          <input
+        <LabelInputContainer>
+          <Label htmlFor="categories">Categories (Separate by commas)</Label>
+          <Input
+            id="categories"
+            name="categories"
+            placeholder="Breakfast, Vegetarian"
             type="text"
-            value={categories}
+            className="mt-1 block w-full px-3 py-2 border rounded-md bg-white" // Ensure white background
             onChange={(e) => setCategories(e.target.value)}
-            className="mt-1 block w-full px-3 py-2 border rounded-md"
           />
-        </div>
+        </LabelInputContainer>
 
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700">
-            Ingredients
-          </label>
+        <LabelInputContainer>
+          <Label htmlFor="ingredients">Ingredients</Label>
           {ingredients.map((ingredient, index) => (
             <div key={index} className="flex space-x-4 mb-2">
-              <input
-                type="text"
+              <Input
                 placeholder="Ingredient Name"
                 value={ingredient.name}
-                onChange={(e) =>
-                  handleIngredientChange(index, "name", e.target.value)
-                }
-                className="block w-1/2 px-3 py-2 border rounded-md"
+                className="bg-white" // Ensure white background
+                onChange={(e) => handleIngredientChange(index, "name", e.target.value)}
                 required
               />
-              <input
-                type="text"
+              <Input
                 placeholder="Quantity"
                 value={ingredient.quantity}
-                onChange={(e) =>
-                  handleIngredientChange(index, "quantity", e.target.value)
-                }
-                className="block w-1/2 px-3 py-2 border rounded-md"
+                className="bg-white" // Ensure white background
+                onChange={(e) => handleIngredientChange(index, "quantity", e.target.value)}
                 required
               />
             </div>
@@ -158,22 +161,25 @@ export default function NewRecipe() {
           >
             + Add Another Ingredient
           </button>
-        </div>
+        </LabelInputContainer>
 
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700">
-            Recipe Image
-          </label>
-          <input
+        <LabelInputContainer>
+          <Label htmlFor="image">Recipe Image</Label>
+          <Input
+            id="image"
+            name="image"
             type="file"
+            className="mt-1 block w-full px-3 py-2 border rounded-md bg-white" // Ensure white background
             onChange={handleImageChange}
-            className="mt-1 block w-full px-3 py-2 border rounded-md"
           />
-        </div>
+        </LabelInputContainer>
+
+        {error && <p className="text-red-500 text-sm">{error}</p>}
+        {success && <p className="text-green-500 text-sm">{success}</p>}
 
         <button
+          className="bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 text-white w-full py-2 rounded-md font-medium shadow-md transition duration-300 ease-in-out transform hover:scale-105"
           type="submit"
-          className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
         >
           Create Recipe
         </button>
