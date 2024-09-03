@@ -350,6 +350,29 @@ def add_ingredient(recipe_id):
         db.session.rollback()
         print(f"Error: {e}")
         return jsonify({"error": "An error occurred while adding the ingredient."}), 500
+    
+
+@app.route("/recipes/<int:recipe_id>/ingredients", methods=["GET"])
+def get_ingredients(recipe_id):
+    try:
+        recipe = Recipe.query.get(recipe_id)
+        if not recipe:
+            return jsonify({"error": "Recipe not found."}), 404
+
+        # Retrieve all ingredients for the specified recipe
+        ingredients = Ingredient.query.filter_by(recipe_id=recipe_id).all()
+
+        return jsonify([
+            {
+                "id": ingredient.id,
+                "name": ingredient.name,
+                "quantity": ingredient.quantity
+            } for ingredient in ingredients
+        ]), 200
+
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify({"error": "An error occurred while retrieving ingredients."}), 500
 
 @app.route('/')
 def index():
