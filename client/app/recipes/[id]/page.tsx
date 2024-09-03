@@ -1,7 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { useParams } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
+import Link from "next/link"; // For navigation
+import Image from "next/image"; // For the logo
 
 type RecipeDetail = {
   id: number;
@@ -55,6 +56,25 @@ export default function RecipeDetailPage() {
 
   return (
     <div className="max-w-3xl mx-auto p-4">
+      {/* Header with Logo, Project Name, and Buttons */}
+      <div className="flex justify-between items-center mb-6">
+        <div className="flex items-center">
+          <Image src="/logo.png" alt="Logo" width={40} height={40} />
+          <span className="ml-2 text-2xl font-bold text-neutral-800 dark:text-neutral-200">
+            Smart Chef AI
+          </span>
+        </div>
+        <div className="flex space-x-4">
+          <button className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">
+            Edit Recipe
+          </button>
+          <button className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded">
+            Delete Recipe
+          </button>
+        </div>
+      </div>
+
+      {/* Recipe Details */}
       <h1 className="text-3xl font-bold text-neutral-800 dark:text-neutral-200">{recipe.title}</h1>
       <p className="mt-4 text-neutral-600 dark:text-neutral-400">{recipe.description}</p>
 
