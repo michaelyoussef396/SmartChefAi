@@ -5,6 +5,7 @@ import { Tabs } from "@/components/ui/tabs";
 import { ParallaxScroll } from "@/components/ui/parallax-scroll";
 import { BackgroundGradient } from "@/components/ui/background-gradient";
 import Image from "next/image";
+import Link from "next/link";
 
 type Recipe = {
   id: number;
@@ -130,8 +131,16 @@ export default function HomePage() {
         <span className="text-2xl font-bold text-white">Smart Chef AI</span>
       </div>
 
+      <div className="absolute top-4 right-28"> {/* Adjusted right margin */}
+        <Link href="/new-recipe">
+          <button className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded">
+            New Recipe
+          </button>
+        </Link>
+      </div>
+
       {/* Logout Button */}
-      <div className="absolute top-4 right-4">
+      <div className="absolute top-4 right-4"> {/* This stays at right 4 */}
         <button
           onClick={handleLogout}
           className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded"

@@ -28,9 +28,6 @@ class User(db.Model, SerializerMixin):
     def verify_password(self, password):
         return self._password == password
 
-    # One-to-many relationship with Recipe
-    recipes = db.relationship('Recipe', backref='user', lazy=True)
-
     serialize_rules = ('-_password',)
 
 class Recipe(db.Model, SerializerMixin):
@@ -41,20 +38,12 @@ class Recipe(db.Model, SerializerMixin):
     image = db.Column(db.String(255), nullable=True)
     description = db.Column(db.Text, nullable=True)
     
-    # One-to-many relationship with Ingredient
     ingredients = db.relationship('Ingredient', backref='recipe', lazy=True)
-    
-    # JSON field to store instructions as a list
     instructions = db.Column(JSON, nullable=True)
     
-    # Foreign Key to link to the User model
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    
-    # Many-to-many relationship with Category
-    categories = db.relationship('Category', secondary=association_table, backref='recipes_in_category')
+    categories = db.relationship('Category', secondary=association_table, backref='recipes_in_category', overlaps="categories_for_recipe,recipes_in_category")
 
-    serialize_rules = ('-user', '-ingredients', '-categories', '-instructions')  # Exclude user, ingredients, categories, and instructions from serialization
-
+    serialize_rules = ('-ingredients', '-categories', '-instructions')
 class Ingredient(db.Model, SerializerMixin):
     __tablename__ = 'ingredients'
     
@@ -73,7 +62,6 @@ class Category(db.Model, SerializerMixin):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String(255), nullable=False)
     
-    # Many-to-many relationship with Recipe through association table
-    recipes = db.relationship('Recipe', secondary=association_table, backref='categories_for_recipe')
+    recipes = db.relationship('Recipe', secondary=association_table, backref='categories_for_recipe', overlaps="categories_for_recipe,recipes_in_category")
 
     serialize_rules = ('-recipes',)

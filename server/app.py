@@ -1,19 +1,20 @@
 #!/usr/bin/env python3
 
 # Standard library imports
-
+import os
 # Remote library imports
 from flask import request, jsonify, session
 from flask_restful import Resource
 from flask_bcrypt import Bcrypt
-
+from werkzeug.utils import secure_filename
 # Local imports
 from config import app, db, api
 from models import User, Recipe, Ingredient, Category  # Import models
 
 # Initialize Bcrypt
 bcrypt = Bcrypt(app)
-
+UPLOAD_FOLDER = 'static/images'  # Define the upload folder
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 # Views go here!
 @app.route("/register", methods=["POST"])
 def register_user():
@@ -21,7 +22,7 @@ def register_user():
     first_name = data.get("first_name")
     last_name = data.get("last_name")
     email = data.get("email")
-    password = data.get("password")  # Directly use the plaintext password
+    password = data.get("password")
 
     if not all([first_name, last_name, email, password]):
         return jsonify({"error": "All fields are required"}), 400
@@ -34,13 +35,12 @@ def register_user():
         first_name=first_name,
         last_name=last_name,
         email=email,
-        password=password  # Store the plaintext password
+        password=password
     )
 
     try:
         db.session.add(new_user)
         db.session.commit()
-        session['user_id'] = new_user.id  # Set user_id in session
         return jsonify({
             "id": new_user.id,
             "first_name": new_user.first_name,
@@ -49,7 +49,7 @@ def register_user():
         }), 201
     except Exception as e:
         db.session.rollback()
-        print(f"Error: {e}")  # Print the error to the console
+        print(f"Error: {e}")
         return jsonify({"error": "An error occurred while registering the user"}), 500
 
 @app.route("/login", methods=["POST"])
@@ -75,18 +75,29 @@ def login_user():
 
 @app.route("/recipes", methods=["POST"])
 def create_recipe():
-    if 'user_id' not in session:
-        return jsonify({"error": "Unauthorized"}), 401
-    
-    data = request.json
+    data = request.form
     title = data.get("title")
     description = data.get("description")
-    instructions = data.get("instructions")
-    ingredients = data.get("ingredients")
-    categories = data.get("categories")
+    instructions = data.getlist("instructions")  # Expecting instructions to be a list
+    categories = data.get("categories", "").split(",")  # Assuming categories are comma-separated
+    ingredients = []
+    image = request.files.get("image")
 
-    if not all([title, instructions, ingredients]):
-        return jsonify({"error": "Title, instructions, and ingredients are required."}), 400
+    # Process ingredients from the form
+    for key in request.form:
+        if key.startswith("ingredients[") and key.endswith("][name]"):
+            index = key[len("ingredients["):-len("][name]")]
+            name = request.form[key]
+            quantity = request.form.get(f"ingredients[{index}][quantity]")
+            ingredients.append({"name": name, "quantity": quantity})
+
+    # Handle image upload
+    if image:
+        filename = secure_filename(image.filename)
+        image_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        image.save(image_path)
+    else:
+        filename = None
 
     try:
         # Create new recipe
@@ -94,12 +105,24 @@ def create_recipe():
             title=title,
             description=description,
             instructions=instructions,
-            user_id=session['user_id']
+            image=filename  # Store the filename in the recipe
         )
         db.session.add(new_recipe)
-        db.session.commit()  # Commit to generate recipe ID
+        db.session.commit()
 
-        # Add ingredients
+        # Process and add categories
+        for category_name in categories:
+            # Check if the category already exists in the database
+            category = Category.query.filter_by(name=category_name.strip()).first()
+            if not category:
+                # If the category does not exist, create a new one
+                category = Category(name=category_name.strip())
+                db.session.add(category)
+                db.session.commit()
+            # Add the category to the new recipe
+            new_recipe.categories.append(category)
+
+        # Process and add ingredients
         for ingredient_data in ingredients:
             ingredient = Ingredient(
                 name=ingredient_data["name"],
@@ -108,18 +131,8 @@ def create_recipe():
             )
             db.session.add(ingredient)
 
-        # Add categories (if provided)
-        if categories:
-            for category_name in categories:
-                category = Category.query.filter_by(name=category_name).first()
-                if not category:
-                    category = Category(name=category_name)
-                    db.session.add(category)
-                    db.session.commit()
-                
-                new_recipe.categories.append(category)
-
-        db.session.commit()  # Final commit to save all changes
+        # Final commit to save all changes
+        db.session.commit()
 
         return jsonify({
             "id": new_recipe.id,
@@ -127,14 +140,15 @@ def create_recipe():
             "description": new_recipe.description,
             "instructions": new_recipe.instructions,
             "ingredients": [{"name": ing.name, "quantity": ing.quantity} for ing in new_recipe.ingredients],
-            "categories": [cat.name for cat in new_recipe.categories]
+            "categories": [cat.name for cat in new_recipe.categories],
+            "image": filename
         }), 201
 
     except Exception as e:
         db.session.rollback()
         print(f"Error: {e}")
         return jsonify({"error": "An error occurred while creating the recipe."}), 500
-    
+
 
 @app.route("/recipes", methods=["GET"])
 def get_recipes():
@@ -176,9 +190,6 @@ def get_recipe(recipe_id):
 
 @app.route("/recipes/<int:recipe_id>", methods=["PUT"])
 def update_recipe(recipe_id):
-    if 'user_id' not in session:
-        return jsonify({"error": "Unauthorized"}), 401
-
     data = request.json
     title = data.get("title")
     description = data.get("description")
@@ -187,16 +198,10 @@ def update_recipe(recipe_id):
     categories = data.get("categories")
 
     try:
-        # Fetch the recipe by ID
         recipe = Recipe.query.get(recipe_id)
         if not recipe:
             return jsonify({"error": "Recipe not found."}), 404
 
-        # Ensure the current user is the owner of the recipe
-        if recipe.user_id != session['user_id']:
-            return jsonify({"error": "Unauthorized to update this recipe."}), 403
-
-        # Update the recipe fields
         if title:
             recipe.title = title
         if description:
@@ -204,11 +209,8 @@ def update_recipe(recipe_id):
         if instructions:
             recipe.instructions = instructions
 
-        # Update ingredients
         if ingredients:
-            # Clear existing ingredients
             Ingredient.query.filter_by(recipe_id=recipe_id).delete()
-            # Add new ingredients
             for ingredient_data in ingredients:
                 ingredient = Ingredient(
                     name=ingredient_data["name"],
@@ -217,9 +219,7 @@ def update_recipe(recipe_id):
                 )
                 db.session.add(ingredient)
 
-        # Update categories
         if categories:
-            # Clear existing categories
             recipe.categories.clear()
             for category_name in categories:
                 category = Category.query.filter_by(name=category_name).first()
@@ -229,7 +229,7 @@ def update_recipe(recipe_id):
                     db.session.commit()
                 recipe.categories.append(category)
 
-        db.session.commit()  # Commit changes
+        db.session.commit()
 
         return jsonify({
             "id": recipe.id,
@@ -247,17 +247,10 @@ def update_recipe(recipe_id):
 
 @app.route("/recipes/<int:recipe_id>", methods=["DELETE"])
 def delete_recipe(recipe_id):
-    if 'user_id' not in session:
-        return jsonify({"error": "Unauthorized"}), 401
-
     try:
         recipe = Recipe.query.get(recipe_id)
         if not recipe:
             return jsonify({"error": "Recipe not found."}), 404
-
-        # Ensure the current user is the owner of the recipe
-        if recipe.user_id != session['user_id']:
-            return jsonify({"error": "Unauthorized to delete this recipe."}), 403
 
         db.session.delete(recipe)
         db.session.commit()
@@ -299,12 +292,12 @@ def create_category():
 @app.route("/categories", methods=["GET"])
 def get_categories():
     try:
-        categories = Category.query.all()  # Retrieve all categories
+        categories = Category.query.all()
         return jsonify([
             {
                 "id": category.id,
                 "name": category.name
-            } for category in categories  # Convert each category to a dictionary
+            } for category in categories
         ]), 200
     except Exception as e:
         print(f"Error: {e}")
@@ -312,9 +305,6 @@ def get_categories():
     
 @app.route("/recipes/<int:recipe_id>/ingredients", methods=["POST"])
 def add_ingredient(recipe_id):
-    if 'user_id' not in session:
-        return jsonify({"error": "Unauthorized"}), 401
-
     data = request.json
     name = data.get("name")
     quantity = data.get("quantity")
@@ -327,11 +317,6 @@ def add_ingredient(recipe_id):
         if not recipe:
             return jsonify({"error": "Recipe not found."}), 404
 
-        # Ensure the current user is the owner of the recipe
-        if recipe.user_id != session['user_id']:
-            return jsonify({"error": "Unauthorized to add ingredients to this recipe."}), 403
-
-        # Add new ingredient
         new_ingredient = Ingredient(
             name=name,
             quantity=quantity,
@@ -359,7 +344,6 @@ def get_ingredients(recipe_id):
         if not recipe:
             return jsonify({"error": "Recipe not found."}), 404
 
-        # Retrieve all ingredients for the specified recipe
         ingredients = Ingredient.query.filter_by(recipe_id=recipe_id).all()
 
         return jsonify([
@@ -376,9 +360,6 @@ def get_ingredients(recipe_id):
     
 @app.route("/recipes/<int:recipe_id>/categories/<int:category_id>", methods=["POST"])
 def add_category_to_recipe(recipe_id, category_id):
-    if 'user_id' not in session:
-        return jsonify({"error": "Unauthorized"}), 401
-
     try:
         recipe = Recipe.query.get(recipe_id)
         if not recipe:
@@ -387,10 +368,6 @@ def add_category_to_recipe(recipe_id, category_id):
         category = Category.query.get(category_id)
         if not category:
             return jsonify({"error": "Category not found."}), 404
-
-        # Ensure the current user is the owner of the recipe
-        if recipe.user_id != session['user_id']:
-            return jsonify({"error": "Unauthorized to modify this recipe."}), 403
 
         recipe.categories.append(category)
         db.session.commit()
@@ -406,9 +383,6 @@ def add_category_to_recipe(recipe_id, category_id):
 
 @app.route("/recipes/<int:recipe_id>/categories/<int:category_id>", methods=["DELETE"])
 def remove_category_from_recipe(recipe_id, category_id):
-    if 'user_id' not in session:
-        return jsonify({"error": "Unauthorized"}), 401
-
     try:
         recipe = Recipe.query.get(recipe_id)
         if not recipe:
@@ -417,10 +391,6 @@ def remove_category_from_recipe(recipe_id, category_id):
         category = Category.query.get(category_id)
         if not category:
             return jsonify({"error": "Category not found."}), 404
-
-        # Ensure the current user is the owner of the recipe
-        if recipe.user_id != session['user_id']:
-            return jsonify({"error": "Unauthorized to modify this recipe."}), 403
 
         if category in recipe.categories:
             recipe.categories.remove(category)
