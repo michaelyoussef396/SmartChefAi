@@ -309,6 +309,47 @@ def get_categories():
     except Exception as e:
         print(f"Error: {e}")
         return jsonify({"error": "An error occurred while retrieving categories."}), 500
+    
+@app.route("/recipes/<int:recipe_id>/ingredients", methods=["POST"])
+def add_ingredient(recipe_id):
+    if 'user_id' not in session:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    data = request.json
+    name = data.get("name")
+    quantity = data.get("quantity")
+
+    if not all([name, quantity]):
+        return jsonify({"error": "Name and quantity are required."}), 400
+
+    try:
+        recipe = Recipe.query.get(recipe_id)
+        if not recipe:
+            return jsonify({"error": "Recipe not found."}), 404
+
+        # Ensure the current user is the owner of the recipe
+        if recipe.user_id != session['user_id']:
+            return jsonify({"error": "Unauthorized to add ingredients to this recipe."}), 403
+
+        # Add new ingredient
+        new_ingredient = Ingredient(
+            name=name,
+            quantity=quantity,
+            recipe_id=recipe_id
+        )
+        db.session.add(new_ingredient)
+        db.session.commit()
+
+        return jsonify({
+            "id": new_ingredient.id,
+            "name": new_ingredient.name,
+            "quantity": new_ingredient.quantity
+        }), 201
+
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error: {e}")
+        return jsonify({"error": "An error occurred while adding the ingredient."}), 500
 
 @app.route('/')
 def index():
