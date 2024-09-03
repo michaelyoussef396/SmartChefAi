@@ -296,6 +296,20 @@ def create_category():
         print(f"Error: {e}")
         return jsonify({"error": "An error occurred while creating the category."}), 500
 
+@app.route("/categories", methods=["GET"])
+def get_categories():
+    try:
+        categories = Category.query.all()  # Retrieve all categories
+        return jsonify([
+            {
+                "id": category.id,
+                "name": category.name
+            } for category in categories  # Convert each category to a dictionary
+        ]), 200
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify({"error": "An error occurred while retrieving categories."}), 500
+
 @app.route('/')
 def index():
     return '<h1>Project Server</h1>'
