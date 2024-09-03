@@ -180,18 +180,26 @@ def get_recipe(recipe_id):
 
 @app.route("/recipes/<int:recipe_id>", methods=["PUT"])
 def update_recipe(recipe_id):
-    data = request.json
-    title = data.get("title")
-    description = data.get("description")
-    instructions = data.get("instructions")
-    ingredients = data.get("ingredients")
-    categories = data.get("categories")
+    title = request.form.get("title")
+    description = request.form.get("description")
+    instructions = request.form.get("instructions").split("\n")  # Assuming instructions are sent as a multiline string
+    categories = request.form.get("categories", "").split(",")  # Assuming categories are comma-separated
+    ingredients = []
+
+    # Process ingredients from the form
+    for key in request.form:
+        if key.startswith("ingredients[") and key.endswith("][name]"):
+            index = key[len("ingredients["):-len("][name]")]
+            name = request.form[key]
+            quantity = request.form.get(f"ingredients[{index}][quantity]")
+            ingredients.append({"name": name, "quantity": quantity})
 
     try:
         recipe = Recipe.query.get(recipe_id)
         if not recipe:
             return jsonify({"error": "Recipe not found."}), 404
 
+        # Update the basic fields
         if title:
             recipe.title = title
         if description:
@@ -199,19 +207,21 @@ def update_recipe(recipe_id):
         if instructions:
             recipe.instructions = instructions
 
-        if ingredients:
-            Ingredient.query.filter_by(recipe_id=recipe_id).delete()
-            for ingredient_data in ingredients:
-                ingredient = Ingredient(
-                    name=ingredient_data["name"],
-                    quantity=ingredient_data["quantity"],
-                    recipe_id=recipe_id
-                )
-                db.session.add(ingredient)
+        # Update ingredients
+        Ingredient.query.filter_by(recipe_id=recipe_id).delete()  # Clear existing ingredients
+        for ingredient_data in ingredients:
+            ingredient = Ingredient(
+                name=ingredient_data["name"],
+                quantity=ingredient_data["quantity"],
+                recipe_id=recipe_id
+            )
+            db.session.add(ingredient)
 
-        if categories:
-            recipe.categories.clear()
-            for category_name in categories:
+        # Update categories
+        recipe.categories.clear()  # Clear existing categories
+        for category_name in categories:
+            category_name = category_name.strip()
+            if category_name:  # Ensure it's not an empty string
                 category = Category.query.filter_by(name=category_name).first()
                 if not category:
                     category = Category(name=category_name)
@@ -219,6 +229,7 @@ def update_recipe(recipe_id):
                     db.session.commit()
                 recipe.categories.append(category)
 
+        # Commit the changes
         db.session.commit()
 
         return jsonify({
