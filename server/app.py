@@ -436,6 +436,30 @@ def remove_category_from_recipe(recipe_id, category_id):
         print(f"Error: {e}")
         return jsonify({"error": "An error occurred while removing the category from the recipe."}), 500
 
+@app.route("/users/<int:user_id>/recipes", methods=["GET"])
+def get_user_recipes(user_id):
+    try:
+        user = User.query.get(user_id)
+        if not user:
+            return jsonify({"error": "User not found."}), 404
+
+        recipes = Recipe.query.filter_by(user_id=user_id).all()
+
+        return jsonify([
+            {
+                "id": recipe.id,
+                "title": recipe.title,
+                "description": recipe.description,
+                "instructions": recipe.instructions,
+                "ingredients": [{"name": ing.name, "quantity": ing.quantity} for ing in recipe.ingredients],
+                "categories": [cat.name for cat in recipe.categories]
+            } for recipe in recipes
+        ]), 200
+
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify({"error": "An error occurred while retrieving the user's recipes."}), 500
+
 @app.route('/')
 def index():
     return '<h1>Project Server</h1>'
