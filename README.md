@@ -1,357 +1,180 @@
-# Phase 4 Full-Stack Application Project Template
+# SmartChefAi
 
-## Learning Goals
+SmartChefAi is a full-stack application that allows users to search, manage, and parse recipes using both a user-friendly React frontend and a Flask backend. It includes features for adding, updating, and deleting recipes, along with the ability to parse recipes from URLs using AI for ingredient and instruction extraction.
 
-- Discuss the basic directory structure of a full-stack Flask/React application.
-- Carry out the first steps in creating your Phase 4 project.
+## Table of Contents
 
----
+- [Project Overview](#project-overview)
+- [Features](#features)
+- [Technologies Used](#technologies-used)
+- [Getting Started](#getting-started)
+  - [Backend Setup](#backend-setup)
+  - [Frontend Setup](#frontend-setup)
+  - [Database Setup](#database-setup)
+- [API Routes](#api-routes)
+- [Models](#models)
+- [AI Parsing](#ai-parsing)
+- [File Structure](#file-structure)
+- [Conclusion](#conclusion)
 
-## Introduction
+## Project Overview
 
-Fork and clone this lesson for a template for your full-stack application. Take
-a look at the directory structure before we begin (NOTE: node_modules will be
-generated in a subsequent step):
+SmartChefAi is a recipe management system that enables users to create, retrieve, update, and delete recipes. It allows users to categorize recipes, associate ingredients with them, and automatically parse recipe details from URLs using GPT-based AI models.
 
-```console
-$ tree -L 2
-$ # the -L argument limits the depth at which we look into the directory structure
-.
-├── CONTRIBUTING.md
-├── LICENSE.md
-├── Pipfile
-├── README.md
-├── client
-│   ├── README.md
-│   ├── package.json
-│   ├── public
-│   └── src
-└── server
-    ├── app.py
-    ├── config.py
-    ├── models.py
-    └── seed.py
-```
+This project integrates the following features:
 
-A `migrations` folder will be added to the `server` directory in a later step.
+- A React frontend for user interaction and recipe management.
+- A Flask REST API for backend operations like handling recipes and categories.
+- AI-powered recipe parsing for extracting instructions and ingredients from URLs.
+- User authentication with registration and login functionality.
+- Categorization and search features for better organization of recipes.
 
-The `client` folder contains a basic React application, while the `server`
-folder contains a basic Flask application. You will adapt both folders to
-implement the code for your project .
+## Features
 
-NOTE: If you did not previously install `tree` in your environment setup, MacOS
-users can install this with the command `brew install tree`. WSL and Linux users
-can run `sudo apt-get install tree` to download it as well.
+- **Recipe Management**: Add, view, edit, and delete recipes with associated ingredients and categories.
+- **AI Recipe Parsing**: Automatically parse recipes from a URL using GPT-3.5-powered AI for extracting ingredients and instructions.
+- **Categorization**: Organize recipes into categories and filter them based on categories.
+- **User Authentication**: Register and log in to manage your personalized recipes.
+- **Real-time Search**: Search recipes dynamically as you type.
+- **Interactive UI**: Fully responsive user interface built with React and Tailwind CSS.
 
-## Where Do I Start?
+## Technologies Used
 
-Just as with your Phase 3 Project, this will likely be one of the biggest
-projects you've undertaken so far. Your first task should be creating a Git
-repository to keep track of your work and roll back any undesired changes.
+### Frontend
 
-### Removing Existing Git Configuration
+- **Next.js**: A React framework for building fast, server-side-rendered applications.
+- **TypeScript**: For type safety in the frontend.
+- **Tailwind CSS**: For styling and responsive design.
+- **Framer Motion**: For smooth animations.
 
-If you're using this template, start off by removing the existing metadata for
-Github and Canvas. Run the following command to carry this out:
+### Backend
 
-```console
-$ rm -rf .git .canvas
-```
+- **Flask**: Python micro-framework used to build RESTful APIs.
+- **SQLAlchemy**: ORM (Object Relational Mapper) for database management.
+- **PostgreSQL**: Database used for storing recipes, ingredients, and categories.
+- **Flask-RESTful**: Flask extension for creating REST APIs.
+- **Flask-Bcrypt**: For password hashing.
+- **OpenAI API**: For AI-powered recipe parsing.
+- **Flask-Migrate**: For handling database migrations.
 
-The `rm` command removes files from your computer's memory. The `-r` flag tells
-the console to remove _recursively_, which allows the command to remove
-directories and the files within them. `-f` removes them permanently.
+## Getting Started
 
-`.git` contains this directory's configuration to track changes and push to
-Github (you want to track and push _your own_ changes instead), and `.canvas`
-contains the metadata to create a Canvas page from your Git repo. You don't have
-the permissions to edit our Canvas course, so it's not worth keeping around.
+### Backend Setup
 
-### Creating Your Own Git Repo
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/your-username/SmartChefAi.git
+   cd SmartChefAi/server
 
-First things first- rename this directory! Once you have an idea for a name,
-move one level up with `cd ..` and run
-`mv python-p4-project-template <new-directory-name>` to change its name (replace
-<new-directory-name> with an appropriate project directory name).
-
-> **Note: If you typed the `mv` command in a terminal within VS Code, you should
-> close VS Code then reopen it.**
-
-> **Note: `mv` actually stands for "move", but your computer interprets this
-> rename as a move from a directory with the old name to a directory with a new
-> name.**
-
-`cd` back into your new directory and run `git init` to create a local git
-repository. Add all of your local files to version control with `git add --all`,
-then commit them with `git commit -m'initial commit'`. (You can change the
-message here- this one is just a common choice.)
-
-Navigate to [GitHub](https://github.com). In the upper-right corner of the page,
-click on the "+" dropdown menu, then select "New repository". Enter the name of
-your local repo, choose whether you would like it to be public or private, make
-sure "Initialize this repository with a README" is unchecked (you already have
-one), then click "Create repository".
-
-Head back to the command line and enter
-`git remote add origin git@github.com:github-username/new-repository-name.git`.
-NOTE: Replace `github-username` with your github username, and
-`new-repository-name` with the name of your new repository. This command will
-map the remote repository to your local repository. Finally, push your first
-commit with `git push -u origin main`.
-
-Your project is now version-controlled locally and online. This will allow you
-to create different versions of your project and pick up your work on a
-different machine if the need arises.
-
----
-
-## Setup
-
-### `server/`
-
-The `server/` directory contains all of your backend code.
-
-`app.py` is your Flask application. You'll want to use Flask to build a simple
-API backend like we have in previous modules. You should use Flask-RESTful for
-your routes. You should be familiar with `models.py` and `seed.py` by now, but
-remember that you will need to use Flask-SQLAlchemy, Flask-Migrate, and
-SQLAlchemy-Serializer instead of SQLAlchemy and Alembic in your models.
-
-The project contains a default `Pipfile` with some basic dependencies. You may
-adapt the `Pipfile` if there are additional dependencies you want to add for
-your project.
-
-To download the dependencies for the backend server, run:
-
-```console
+2. Create a virtual environment and install dependencies:
 pipenv install
 pipenv shell
-```
 
-You can run your Flask API on [`localhost:5555`](http://localhost:5555) by
-running:
+3. Run the Flask server:
+python app.py
 
-```console
-python server/app.py
-```
+The backend server should now be running on http://localhost:5555.
 
-Check that your server serves the default route `http://localhost:5555`. You
-should see a web page with the heading "Project Server".
+Frontend Setup
 
-### `client/`
+1. Navigate to the client directory:
+cd ../client
 
-The `client/` directory contains all of your frontend code. The file
-`package.json` has been configured with common React application dependencies,
-include `react-router-dom`. The file also sets the `proxy` field to forward
-requests to `"http://localhost:5555". Feel free to change this to another port-
-just remember to configure your Flask app to use another port as well!
+2. Install dependencies:
+npm install
 
-To download the dependencies for the frontend client, run:
+3. Run the React application:
+npm run dev
 
-```console
-npm install --prefix client
-```
+The frontend should now be running on http://localhost:3000.
 
-You can run your React app on [`localhost:3000`](http://localhost:3000) by
-running:
+Database Setup
+1. Navigate to the server folder:
+cd ../server
 
-```sh
-npm start --prefix client
-```
-
-Check that your the React client displays a default page
-`http://localhost:3000`. You should see a web page with the heading "Project
-Client".
-
-## Generating Your Database
-
-NOTE: The initial project directory structure does not contain the `instance` or
-`migrations` folders. Change into the `server` directory:
-
-```console
-cd server
-```
-
-Then enter the commands to create the `instance` and `migrations` folders and
-the database `app.db` file:
-
-```
+2. Initialize and upgrade the database:
 flask db init
-flask db upgrade head
-```
+flask db migrate -m "Initial migration"
+flask db upgrade
 
-Type `tree -L 2` within the `server` folder to confirm the new directory
-structure:
+3. (Optional) Seed the database with test data:
+python seed.py
 
-```console
-.
-├── app.py
-├── config.py
-├── instance
-│   └── app.db
-├── migrations
-│   ├── README
-│   ├── __pycache__
-│   ├── alembic.ini
-│   ├── env.py
-│   ├── script.py.mako
-│   └── versions
-├── models.py
-└── seed.py
-```
+API Routes
 
-Edit `models.py` and start creating your models. Import your models as needed in
-other modules, i.e. `from models import ...`.
+User Routes
+- POST /register: Register a new user.
+- POST /login: Log in a user.
 
-Remember to regularly run
-`flask db revision --autogenerate -m'<descriptive message>'`, replacing
-`<descriptive message>` with an appropriate message, and `flask db upgrade head`
-to track your modifications to the database and create checkpoints in case you
-ever need to roll those modifications back.
+Recipe Routes
+- GET /recipes: Fetch all recipes.
+- POST /recipes: Create a new recipe.
+- GET /recipes/ : Get a specific recipe by ID.
+- PUT /recipes/ : Update an existing recipe.
+- DELETE /recipes/ : Delete a recipe.
 
-> **Tip: It's always a good idea to start with an empty revision! This allows
-> you to roll all the way back while still holding onto your database. You can
-> create this empty revision with `flask db revision -m'Create DB'`.**
+Category Routes
+- GET /categories: Fetch all categories.
+- POST /categories: Create a new category.
+- DELETE /categories : Delete a category.
 
-If you want to seed your database, now would be a great time to write out your
-`seed.py` script and run it to generate some test data. Faker has been included
-in the Pipfile if you'd like to use that library.
+AI Recipe Parsing Route
+- POST /parse-recipe: Parse a recipe from a URL using GPT-3.5.
 
----
+Models
 
-#### `config.py`
+User
+- id: Primary key.
+- first_name: User’s first name.
+- last_name: User’s last name.
+- email: Unique email address.
+- password: Hashed password for security.
 
-When developing a large Python application, you might run into a common issue:
-_circular imports_. A circular import occurs when two modules import from one
-another, such as `app.py` and `models.py`. When you create a circular import and
-attempt to run your app, you'll see the following error:
+Recipe
 
-```console
-ImportError: cannot import name
-```
+- id: Primary key.
+- title: Recipe title.
+- description: Recipe description.
+- instructions: List of instructions in JSON format.
+- categories: Many-to-many relationship with categories.
+- ingredients: One-to-many relationship with ingredients.
 
-If you're going to need an object in multiple modules like `app` or `db`,
-creating a _third_ module to instantiate these objects can save you a great deal
-of circular grief. Here's a good start to a Flask config file (you may need more
-if you intend to include features like authentication and passwords):
+Ingredient
 
-```py
-# Standard library imports
+- id: Primary key.
+- name: Ingredient name.
+- quantity: Quantity of the ingredient.
+- recipe_id: Foreign key linking to a recipe.
 
-# Remote library imports
-from flask import Flask
-from flask_cors import CORS
-from flask_migrate import Migrate
-from flask_restful import Api
-from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import MetaData
+Category
 
-# Local imports
+- id: Primary key.
+- name: Category name.
+- recipes: Many-to-many relationship with recipes.
 
-# Instantiate app, set attributes
-app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.json.compact = False
+AI Parsing
+This project leverages OpenAI’s GPT-3.5 model for intelligent parsing of recipes from URLs. When a user submits a URL, the content is fetched, and the AI is used to extract the recipe title, ingredients, and instructions automatically.
 
-# Define metadata, instantiate db
-metadata = MetaData(naming_convention={
-    "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
-})
-db = SQLAlchemy(metadata=metadata)
-migrate = Migrate(app, db)
-db.init_app(app)
+File Structure
+SmartChefAi/
+│
+├── client/
+│   ├── public/
+│   └── src/
+│       ├── components/
+│       ├── pages/
+│       ├── styles/
+│       └── types/
+│
+├── server/
+│   ├── app.py
+│   ├── models.py
+│   ├── config.py
+│   ├── seed.py
+│   └── migrations/
+│
+├── README.md
+└── .env
 
-# Instantiate REST API
-api = Api(app)
-
-# Instantiate CORS
-CORS(app)
-
-```
-
-Now let's review that last line...
-
-#### CORS
-
-CORS (Cross-Origin Resource Sharing) is a system that uses HTTP headers to
-determine whether resources from different servers-of-origin can be accessed. If
-you're using the fetch API to connect your frontend to your Flask backend, you
-need to configure CORS on your Flask application instance. Lucky for us, that
-only takes one line:
-
-```py
-CORS(app)
-
-```
-
-By default, Flask-CORS enables CORS on all routes in your application with all
-fetching servers. You can also specify the resources that allow CORS. The
-following specifies that routes beginning with `api/` allow CORS from any
-originating server:
-
-```py
-CORS(app, resources={r"/api/*": {"origins": "*"}})
-
-```
-
-You can also set this up resource-by-resource by importing and using the
-`@cross_origin` decorator:
-
-```py
-@app.route("/")
-@cross_origin()
-def howdy():
-  return "Howdy partner!"
-
-```
-
----
-
-## Updating Your README.md
-
-`README.md` is a Markdown file that describes your project. These files can be
-used in many different ways- you may have noticed that we use them to generate
-entire Canvas lessons- but they're most commonly used as homepages for online
-Git repositories. **When you develop something that you want other people to
-use, you need to have a README.**
-
-Markdown is not a language that we cover in Flatiron's Software Engineering
-curriculum, but it's not a particularly difficult language to learn (if you've
-ever left a comment on Reddit, you might already know the basics). Refer to the
-cheat sheet in this lesson's resources for a basic guide to Markdown.
-
-### What Goes into a README?
-
-This README should serve as a template for your own- go through the important
-files in your project and describe what they do. Each file that you edit (you
-can ignore your migration files) should get at least a paragraph. Each function
-should get a small blurb.
-
-You should descibe your application first, and with a good level of detail. The
-rest should be ordered by importance to the user. (Probably routes next, then
-models.)
-
-Screenshots and links to resources that you used throughout are also useful to
-users and collaborators, but a little more syntactically complicated. Only add
-these in if you're feeling comfortable with Markdown.
-
----
-
-## Conclusion
-
-A lot of work goes into a full-stack application, but it all relies on concepts
-that you've practiced thoroughly throughout this phase. Hopefully this template
-and guide will get you off to a good start with your Phase 4 Project.
-
-Happy coding!
-
----
-
-## Resources
-
-- [Setting up a respository - Atlassian](https://www.atlassian.com/git/tutorials/setting-up-a-repository)
-- [Create a repo- GitHub Docs](https://docs.github.com/en/get-started/quickstart/create-a-repo)
-- [Markdown Cheat Sheet](https://www.markdownguide.org/cheat-sheet/)
-- [Python Circular Imports - StackAbuse](https://stackabuse.com/python-circular-imports/)
-- [Flask-CORS](https://flask-cors.readthedocs.io/en/latest/)
+Conclusion
+SmartChefAi is a robust full-stack recipe management platform powered by AI, offering a user-friendly interface for searching, categorizing, and managing recipes. The AI parsing feature ensures that users can easily add recipes from external URLs.
