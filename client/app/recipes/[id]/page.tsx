@@ -51,7 +51,9 @@ export default function RecipeDetailPage() {
       {/* Header with Logo, Project Name, and Buttons */}
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center">
-          <Image src="/logo.png" alt="Logo" width={40} height={40} />
+          <a href="/">
+            <Image src="/logo.png" alt="Logo" width={40} height={40} />
+          </a>
           <span className="ml-2 text-2xl font-bold text-neutral-800 dark:text-neutral-200">
             Smart Chef AI
           </span>

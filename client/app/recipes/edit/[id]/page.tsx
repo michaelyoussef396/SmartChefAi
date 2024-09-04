@@ -4,6 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { useRouter, useParams } from "next/navigation";
+import Header from "@/components/Header";
 
 const LabelInputContainer = ({
   children,
@@ -112,6 +113,7 @@ export default function EditRecipe() {
 
   return (
     <div className="max-w-md w-full mx-auto rounded-none md:rounded-2xl p-4 md:p-6 shadow-lg bg-white/80 backdrop-blur-sm">
+      <Header />
       <h2 className="font-bold text-2xl text-neutral-800 mb-2">Edit Recipe</h2>
       <p className="text-neutral-600 text-sm mb-4">Update the form below to edit your recipe.</p>
 

@@ -1,3 +1,4 @@
+"use client";
 import ManageResourceForm from "@/components/ManageResourceForm";
 
 export default function AddCategory() {
