@@ -143,8 +143,15 @@ def create_recipe():
 
 @app.route("/recipes", methods=["GET"])
 def get_recipes():
+    category_id = request.args.get("category_id")  # Fetch category_id from query parameters
     try:
-        recipes = Recipe.query.all()
+        if category_id:
+            # Filter recipes by the provided category_id
+            recipes = Recipe.query.join(Recipe.categories).filter(Category.id == category_id).all()
+        else:
+            # Fetch all recipes if no category is provided
+            recipes = Recipe.query.all()
+
         return jsonify([
             {
                 "id": recipe.id,
@@ -158,7 +165,6 @@ def get_recipes():
     except Exception as e:
         print(f"Error: {e}")
         return jsonify({"error": "An error occurred while retrieving recipes."}), 500
-
 
 @app.route("/recipes/<int:recipe_id>", methods=["GET"])
 def get_recipe(recipe_id):
