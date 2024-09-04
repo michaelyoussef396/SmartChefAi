@@ -25,6 +25,8 @@ export default function HomePage() {
   const [error, setError] = useState<string>("");
   const [categoryName, setCategoryName] = useState(""); // State for input
   const [showInput, setShowInput] = useState(false); // Toggle input visibility
+  const [isSearchMode, setIsSearchMode] = useState(false); // For search mode
+  const [searchQuery, setSearchQuery] = useState(""); // Search query state
   const router = useRouter();
 
   useEffect(() => {
@@ -101,6 +103,11 @@ export default function HomePage() {
       setError(`Category '${categoryName}' not found.`);
     }
   };
+
+  // Filter recipes by title for search mode
+  const filteredRecipes = allRecipes.filter((recipe) =>
+    recipe.title?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const tabContent = [
     {
@@ -188,11 +195,33 @@ export default function HomePage() {
 
       {/* Buttons */}
       <div className="absolute top-2 right-4 flex space-x-4">
-        <Link href="/new-recipe">
-          <button className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded">
-            New Recipe
-          </button>
-        </Link>
+        {/* Search Button */}
+        <div className="flex items-center space-x-2">
+          {isSearchMode ? (
+            <div className="flex items-center space-x-2">
+              <input
+                type="text"
+                placeholder="Search by title..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="px-3 py-2 rounded-md"
+              />
+              <button
+                onClick={() => setIsSearchMode(false)}
+                className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded"
+              >
+                Cancel
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setIsSearchMode(true)}
+              className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
+            >
+              Search
+            </button>
+          )}
+        </div>
 
         {/* Delete Category Toggle */}
         <div className="flex items-center space-x-2">
@@ -228,21 +257,32 @@ export default function HomePage() {
           )}
         </div>
 
+        <Link href="/new-recipe">
+          <button className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded">
+            New Recipe
+          </button>
+        </Link>
+
+        <Link href="/add-category">
+          <button className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">
+            Add Category
+          </button>
+        </Link>
+
         <button
           onClick={handleLogout}
           className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded"
         >
           Logout
         </button>
-        <Link href="/add-category">
-          <button className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">
-            Add Category
-          </button>
-        </Link>
       </div>
 
       {/* Tabs Component */}
-      <div className="flex flex-col items-center justify-center mt-4 pt-16">
+      <div
+        className={`flex flex-col items-center justify-center mt-4 pt-16 transition-opacity duration-500 ${
+          isSearchMode ? "fade-out" : ""
+        }`}
+      >
         <Tabs
           tabs={tabContent}
           containerClassName="flex flex-wrap justify-center"
@@ -251,6 +291,36 @@ export default function HomePage() {
           contentClassName="w-full"
         />
       </div>
+
+      {/* Search Results */}
+      {isSearchMode && (
+        <div className="flex flex-wrap justify-center gap-6 mt-4">
+          {filteredRecipes.length === 0 ? (
+            <p className="text-center text-neutral-600 dark:text-neutral-400">
+              No recipes found.
+            </p>
+          ) : (
+            filteredRecipes.map((recipe, index) => (
+              <BackgroundGradient
+                key={index}
+                className="rounded-[22px] max-w-md p-4 sm:p-10 bg-white dark:bg-zinc-900"
+              >
+                <h3 className="text-base sm:text-xl text-black mt-4 mb-2 dark:text-neutral-200">
+                  {recipe.title}
+                </h3>
+                <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                  {recipe.description}
+                </p>
+                <Link href={`/recipes/${recipe.id}`}>
+                  <button className="mt-2 text-white bg-green-500 hover:bg-green-600 font-bold py-2 px-4 rounded">
+                    View Recipe
+                  </button>
+                </Link>
+              </BackgroundGradient>
+            ))
+          )}
+        </div>
+      )}
 
       {error && (
         <div className="text-red-500 text-center mt-4">

@@ -16,3 +16,15 @@ body {
 .no-visible-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
+.fade-out {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.fade-out {
+  transition: opacity 0.5s ease-out;
+  opacity: 0;
+  visibility: hidden;
+}

@@ -15,6 +15,7 @@ bcrypt = Bcrypt(app)
 UPLOAD_FOLDER = 'static/images'  # Define the upload folder
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 # Views go here!
+
 @app.route("/register", methods=["POST"])
 def register_user():
     data = request.json
