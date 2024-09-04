@@ -45,7 +45,7 @@ class Recipe(db.Model, SerializerMixin):
         secondary=association_table,
         backref='recipes_in_category',
         passive_deletes=True,  # Ensure SQLAlchemy relies on the DB for deleting association records
-        overlaps="categories_for_recipe,recipes_in_category"
+        overlaps="categories_for_recipe, recipes_in_category"
     )
 
     serialize_rules = ('-ingredients', '-categories', '-instructions')
@@ -72,7 +72,7 @@ class Category(db.Model, SerializerMixin):
         secondary=association_table,
         backref='categories_for_recipe',
         passive_deletes=True,  # Ensure SQLAlchemy relies on the DB for deleting association records
-        overlaps="categories_for_recipe,recipes_in_category"
+        overlaps="categories_for_recipe, recipes_in_category"
     )
 
     serialize_rules = ('-recipes',)

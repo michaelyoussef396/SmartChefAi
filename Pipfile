@@ -13,6 +13,10 @@ sqlalchemy-serializer = "*"
 flask-restful = "*"
 flask-cors = "*"
 faker = "*"
+beautifulsoup4 = "*"
+requests = "*"
+openai = "==0.28"
+python-dotenv = "*"
 
 [requires]
 python_full_version = "3.8.13"

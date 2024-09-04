@@ -7,9 +7,9 @@ from flask import request, jsonify, session
 from flask_restful import Resource
 from flask_bcrypt import Bcrypt
 # Local imports
-from config import app, db, api
+from config import app, db
 from models import User, Recipe, Ingredient, Category  # Import models
-
+from parsers import parse_recipe_from_url 
 # Initialize Bcrypt
 bcrypt = Bcrypt(app)
 UPLOAD_FOLDER = 'static/images'  # Define the upload folder
@@ -321,7 +321,53 @@ def delete_category(category_id):
         print(f"Error: {e}")
         return jsonify({"error": "An error occurred while deleting the category."}), 500
 
+@app.route("/parse-recipe", methods=["POST"])
+def parse_recipe():
+    data = request.json
+    url = data.get("url")
 
+    if not url:
+        return jsonify({"error": "URL is required"}), 400
+
+    # Use the parser to extract recipe data from the URL
+    recipe_data = parse_recipe_from_url(url)
+
+    if not recipe_data:
+        return jsonify({"error": "Failed to parse recipe from URL"}), 500
+
+    try:
+        # Create and save the new recipe in the database
+        new_recipe = Recipe(
+            title=recipe_data["title"],
+            description=recipe_data["description"],
+            instructions=recipe_data["instructions"]
+        )
+        db.session.add(new_recipe)
+        db.session.commit()
+
+        # Add ingredients to the recipe
+        for ingredient_data in recipe_data["ingredients"]:
+            ingredient = Ingredient(
+                name=ingredient_data["name"],
+                quantity=ingredient_data.get("quantity", ""),
+                recipe_id=new_recipe.id
+            )
+            db.session.add(ingredient)
+        db.session.commit()
+
+        # Return the created recipe
+        return jsonify({
+            "id": new_recipe.id,
+            "title": new_recipe.title,
+            "description": new_recipe.description,
+            "instructions": new_recipe.instructions,
+            "ingredients": [{"name": ing.name, "quantity": ing.quantity} for ing in new_recipe.ingredients]
+        }), 201
+
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error: {e}")
+        return jsonify({"error": "An error occurred while saving the recipe"}), 500
 @app.route('/')
 def index():
     return '<h1>Project Server</h1>'
