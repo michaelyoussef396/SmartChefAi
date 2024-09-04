@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { Tabs } from "@/components/ui/tabs";
 import { BackgroundGradient } from "@/components/ui/background-gradient";
 import Link from "next/link";
+import Image from "next/image"; // Import Image component
 
 type Recipe = {
   id: number;
@@ -22,6 +23,8 @@ export default function HomePage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [allRecipes, setAllRecipes] = useState<Recipe[]>([]);
   const [error, setError] = useState<string>("");
+  const [categoryName, setCategoryName] = useState(""); // State for input
+  const [showInput, setShowInput] = useState(false); // Toggle input visibility
   const router = useRouter();
 
   useEffect(() => {
@@ -42,7 +45,6 @@ export default function HomePage() {
         }
 
         const data: Recipe[] = await response.json();
-        console.log("Fetched all recipes:", data); // Debugging: Check the fetched data
         setAllRecipes(data);
       } catch (error) {
         setError("An unexpected error occurred while fetching all recipes.");
@@ -69,7 +71,6 @@ export default function HomePage() {
         }
 
         const data: Category[] = await response.json();
-        console.log("Fetched categories:", data); // Debugging: Check the fetched data
         setCategories(data);
       } catch (error) {
         setError("An unexpected error occurred while fetching categories.");
@@ -88,6 +89,19 @@ export default function HomePage() {
     }
   };
 
+  // Handle searching for a category and navigating to the delete page
+  const handleCategorySearch = () => {
+    const category = categories.find(
+      (cat) => cat.name.toLowerCase() === categoryName.toLowerCase()
+    );
+
+    if (category) {
+      router.push(`/delete-category/${category.id}`);
+    } else {
+      setError(`Category '${categoryName}' not found.`);
+    }
+  };
+
   const tabContent = [
     {
       title: "All",
@@ -99,7 +113,7 @@ export default function HomePage() {
               No recipes available.
             </p>
           ) : (
-            allRecipes.map((recipe, index) => (
+            allRecipes.map((recipe, index) =>
               recipe ? (
                 <BackgroundGradient
                   key={index}
@@ -118,7 +132,7 @@ export default function HomePage() {
                   </Link>
                 </BackgroundGradient>
               ) : null
-            ))
+            )
           )}
         </div>
       ),
@@ -129,7 +143,7 @@ export default function HomePage() {
       content: (
         <div className="flex flex-wrap justify-center gap-6 mt-4">
           {category.recipes && category.recipes.length > 0 ? (
-            category.recipes.map((recipe, index) => (
+            category.recipes.map((recipe, index) =>
               recipe ? (
                 <BackgroundGradient
                   key={index}
@@ -148,7 +162,7 @@ export default function HomePage() {
                   </Link>
                 </BackgroundGradient>
               ) : null
-            ))
+            )
           ) : (
             <p className="text-center text-neutral-600 dark:text-neutral-400">
               No recipes available in this category.
@@ -162,30 +176,73 @@ export default function HomePage() {
   return (
     <div className="relative w-full min-h-screen">
       {/* Logo and Site Name */}
-      <div className="absolute top-2 left-4 flex items-center space-x-4">
+      <div className="absolute top-2 left-4 flex items-center space-x-2">
+        <Image
+          src="/logo.png" // Make sure your logo is in the public directory
+          alt="Logo"
+          width={40}
+          height={40}
+        />
         <span className="text-2xl font-bold text-white">Smart Chef AI</span>
       </div>
 
-      <div className="absolute top-2 right-28">
+      {/* Buttons */}
+      <div className="absolute top-2 right-4 flex space-x-4">
         <Link href="/new-recipe">
           <button className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded">
             New Recipe
           </button>
         </Link>
-      </div>
 
-      {/* Logout Button */}
-      <div className="absolute top-2 right-4">
+        {/* Delete Category Toggle */}
+        <div className="flex items-center space-x-2">
+          {showInput ? (
+            <div className="flex items-center space-x-2">
+              <input
+                type="text"
+                placeholder="Category name"
+                value={categoryName}
+                onChange={(e) => setCategoryName(e.target.value)}
+                className="px-3 py-2 rounded-md"
+              />
+              <button
+                onClick={handleCategorySearch}
+                className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded"
+              >
+                Confirm
+              </button>
+              <button
+                onClick={() => setShowInput(false)}
+                className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded"
+              >
+                Cancel
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setShowInput(true)}
+              className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded"
+            >
+              Delete Category
+            </button>
+          )}
+        </div>
+
         <button
           onClick={handleLogout}
           className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded"
         >
           Logout
         </button>
+        <Link href="/add-category">
+          <button className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">
+            Add Category
+          </button>
+        </Link>
       </div>
 
       {/* Tabs Component */}
-      <div className="flex flex-col items-center justify-center mt-4 pt-16"> {/* Adjust margin and padding */}
+      <div className="flex flex-col items-center justify-center mt-4 pt-16">
         <Tabs
           tabs={tabContent}
           containerClassName="flex flex-wrap justify-center"

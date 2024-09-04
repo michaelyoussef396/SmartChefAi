@@ -71,7 +71,9 @@ export default function RecipeDetailPage() {
             </button>
           </Link>
           <button className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded">
-            Delete Recipe
+            <Link href={`/delete-recipe/${id}`}>
+                Delete Recipe
+            </Link>
           </button>
         </div>
       </div>

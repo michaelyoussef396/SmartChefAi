@@ -431,6 +431,23 @@ def get_user_recipes(user_id):
         print(f"Error: {e}")
         return jsonify({"error": "An error occurred while retrieving the user's recipes."}), 500
 
+@app.route("/categories/<int:category_id>", methods=["DELETE"])
+def delete_category(category_id):
+    try:
+        category = Category.query.get(category_id)
+        if not category:
+            return jsonify({"error": "Category not found."}), 404
+
+        db.session.delete(category)
+        db.session.commit()
+
+        return jsonify({"message": "Category deleted successfully."}), 200
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error: {e}")
+        return jsonify({"error": "An error occurred while deleting the category."}), 500
+
+
 @app.route('/')
 def index():
     return '<h1>Project Server</h1>'
