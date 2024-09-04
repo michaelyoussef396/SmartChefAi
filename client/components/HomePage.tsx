@@ -2,22 +2,11 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Tabs } from "@/components/ui/tabs";
-import { BackgroundGradient } from "@/components/ui/background-gradient";
-import Link from "next/link";
+import { RecipeCard } from "@/components/RecipeCard";
+import { Buttons } from "@/components/Buttons";
 import Image from "next/image"; // Import Image component
+import { Category, Recipe } from "@/types";
 
-type Recipe = {
-  id: number;
-  title?: string;
-  description?: string;
-  instructions?: string[];
-};
-
-type Category = {
-  id: number;
-  name: string;
-  recipes: Recipe[];
-};
 
 export default function HomePage() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -121,24 +110,7 @@ export default function HomePage() {
             </p>
           ) : (
             allRecipes.map((recipe, index) =>
-              recipe ? (
-                <BackgroundGradient
-                  key={index}
-                  className="rounded-[22px] max-w-md p-4 sm:p-10 bg-white dark:bg-zinc-900"
-                >
-                  <h3 className="text-base sm:text-xl text-black mt-4 mb-2 dark:text-neutral-200">
-                    {recipe.title || "No Title"}
-                  </h3>
-                  <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                    {recipe.description || "No description available"}
-                  </p>
-                  <Link href={`/recipes/${recipe.id}`}>
-                    <button className="mt-2 text-white bg-green-500 hover:bg-green-600 font-bold py-2 px-4 rounded">
-                      View Recipe
-                    </button>
-                  </Link>
-                </BackgroundGradient>
-              ) : null
+              recipe ? <RecipeCard key={index} recipe={recipe} /> : null
             )
           )}
         </div>
@@ -151,24 +123,7 @@ export default function HomePage() {
         <div className="flex flex-wrap justify-center gap-6 mt-4">
           {category.recipes && category.recipes.length > 0 ? (
             category.recipes.map((recipe, index) =>
-              recipe ? (
-                <BackgroundGradient
-                  key={index}
-                  className="rounded-[22px] max-w-md p-4 sm:p-10 bg-white dark:bg-zinc-900"
-                >
-                  <h3 className="text-base sm:text-xl text-black mt-4 mb-2 dark:text-neutral-200">
-                    {recipe.title || "No Title"}
-                  </h3>
-                  <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                    {recipe.description || "No description available"}
-                  </p>
-                  <Link href={`/recipes/${recipe.id}`}>
-                    <button className="mt-2 text-white bg-green-500 hover:bg-green-600 font-bold py-2 px-4 rounded">
-                      View Recipe
-                    </button>
-                  </Link>
-                </BackgroundGradient>
-              ) : null
+              recipe ? <RecipeCard key={index} recipe={recipe} /> : null
             )
           ) : (
             <p className="text-center text-neutral-600 dark:text-neutral-400">
@@ -194,88 +149,18 @@ export default function HomePage() {
       </div>
 
       {/* Buttons */}
-      <div className="absolute top-2 right-4 flex space-x-4">
-        {/* Search Button */}
-        <div className="flex items-center space-x-2">
-          {isSearchMode ? (
-            <div className="flex items-center space-x-2">
-              <input
-                type="text"
-                placeholder="Search by title..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="px-3 py-2 rounded-md"
-              />
-              <button
-                onClick={() => setIsSearchMode(false)}
-                className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded"
-              >
-                Cancel
-              </button>
-            </div>
-          ) : (
-            <button
-              onClick={() => setIsSearchMode(true)}
-              className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
-            >
-              Search
-            </button>
-          )}
-        </div>
-
-        {/* Delete Category Toggle */}
-        <div className="flex items-center space-x-2">
-          {showInput ? (
-            <div className="flex items-center space-x-2">
-              <input
-                type="text"
-                placeholder="Category name"
-                value={categoryName}
-                onChange={(e) => setCategoryName(e.target.value)}
-                className="px-3 py-2 rounded-md"
-              />
-              <button
-                onClick={handleCategorySearch}
-                className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded"
-              >
-                Confirm
-              </button>
-              <button
-                onClick={() => setShowInput(false)}
-                className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded"
-              >
-                Cancel
-              </button>
-            </div>
-          ) : (
-            <button
-              onClick={() => setShowInput(true)}
-              className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded"
-            >
-              Delete Category
-            </button>
-          )}
-        </div>
-
-        <Link href="/new-recipe">
-          <button className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded">
-            New Recipe
-          </button>
-        </Link>
-
-        <Link href="/add-category">
-          <button className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">
-            Add Category
-          </button>
-        </Link>
-
-        <button
-          onClick={handleLogout}
-          className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded"
-        >
-          Logout
-        </button>
-      </div>
+      <Buttons
+        showInput={showInput}
+        setShowInput={setShowInput}
+        handleCategorySearch={handleCategorySearch}
+        handleLogout={handleLogout}
+        categoryName={categoryName}
+        setCategoryName={setCategoryName}
+        isSearchMode={isSearchMode}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        setIsSearchMode={setIsSearchMode}
+      />
 
       {/* Tabs Component */}
       <div
@@ -301,22 +186,7 @@ export default function HomePage() {
             </p>
           ) : (
             filteredRecipes.map((recipe, index) => (
-              <BackgroundGradient
-                key={index}
-                className="rounded-[22px] max-w-md p-4 sm:p-10 bg-white dark:bg-zinc-900"
-              >
-                <h3 className="text-base sm:text-xl text-black mt-4 mb-2 dark:text-neutral-200">
-                  {recipe.title}
-                </h3>
-                <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                  {recipe.description}
-                </p>
-                <Link href={`/recipes/${recipe.id}`}>
-                  <button className="mt-2 text-white bg-green-500 hover:bg-green-600 font-bold py-2 px-4 rounded">
-                    View Recipe
-                  </button>
-                </Link>
-              </BackgroundGradient>
+              <RecipeCard key={index} recipe={recipe} />
             ))
           )}
         </div>

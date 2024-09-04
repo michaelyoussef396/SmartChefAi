@@ -3,15 +3,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link"; // For navigation
 import Image from "next/image"; // For the logo
-
-type RecipeDetail = {
-  id: number;
-  title: string;
-  description: string;
-  instructions: string[];
-  ingredients: { name: string; quantity: string }[];
-  categories: string[];
-};
+import { RecipeDetail } from "@/types";
 
 export default function RecipeDetailPage() {
   const [recipe, setRecipe] = useState<RecipeDetail | null>(null);
