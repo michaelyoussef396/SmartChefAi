@@ -1,52 +1,59 @@
-# parsers.py
-
 from bs4 import BeautifulSoup
 import requests
 from ai_models import use_gpt_for_parsing  # Import AI model function
 
 def parse_recipe_from_url(url):
     try:
-        # Get the HTML content from the URL
         response = requests.get(url)
         response.raise_for_status()
 
-        # Parse the HTML using BeautifulSoup
         soup = BeautifulSoup(response.content, "html.parser")
 
-        # Extract the title and description (Modify based on the site structure)
         title = soup.find("h1").get_text(strip=True) if soup.find("h1") else "Untitled"
         description = soup.find("meta", {"name": "description"}).get("content", "") if soup.find("meta", {"name": "description"}) else ""
 
-        # Attempt to manually scrape the instructions and ingredients
         instructions = [step.get_text(strip=True) for step in soup.find_all("li", {"class": "instruction"})]
         ingredients = [{"name": ing.get_text(strip=True), "quantity": ""} for ing in soup.find_all("li", {"class": "ingredient"})]
+        categories = [cat.get_text(strip=True) for cat in soup.find_all("a", {"class": "category"})]
 
-        # If no instructions or ingredients are found, fallback to AI parsing
         if not instructions or not ingredients:
-            # Convert the HTML into plain text for AI parsing
             text_content = soup.get_text(separator="\n", strip=True)
-
-            # Use GPT to parse the text and extract recipe details
             ai_parsed_recipe = use_gpt_for_parsing(text_content)
 
             if ai_parsed_recipe:
-                # Assuming the AI response returns instructions and ingredients in a structured text format.
-                # This is an example parsing, you may need to adjust based on the AI response format.
-                instructions_section = ai_parsed_recipe.split("\nInstructions:")[1].strip() if "\nInstructions:" in ai_parsed_recipe else ""
-                ingredients_section = ai_parsed_recipe.split("\nIngredients:")[1].strip() if "\nIngredients:" in ai_parsed_recipe else ""
+                sections = ai_parsed_recipe.split("\n")
+                title = sections[0].strip() if sections else "Untitled"
+                description = sections[1].strip() if len(sections) > 1 else ""
+                
+                instructions_section = ""
+                ingredients_section = ""
+                categories_section = ""
+                current_section = None
 
-                return {
-                    "title": title,
-                    "description": description,
-                    "instructions": instructions_section.split("\n") if instructions_section else [],
-                    "ingredients": [{"name": i.strip(), "quantity": ""} for i in ingredients_section.split("\n") if ingredients_section]
-                }
+                for line in sections[2:]:
+                    if line.startswith("Instructions:"):
+                        current_section = "instructions"
+                    elif line.startswith("Ingredients:"):
+                        current_section = "ingredients"
+                    elif line.startswith("Categories:"):
+                        current_section = "categories"
+                    elif current_section == "instructions":
+                        instructions_section += line + "\n"
+                    elif current_section == "ingredients":
+                        ingredients_section += line + "\n"
+                    elif current_section == "categories":
+                        categories_section += line + "\n"
+
+                instructions = instructions_section.strip().split("\n") if instructions_section else []
+                ingredients = [{"name": i.strip(), "quantity": ""} for i in ingredients_section.strip().split("\n") if ingredients_section]
+                categories = [cat.strip() for cat in categories_section.strip().split("\n") if categories_section]
 
         return {
             "title": title,
             "description": description,
             "instructions": instructions,
-            "ingredients": ingredients
+            "ingredients": ingredients,
+            "categories": categories
         }
 
     except Exception as e:
