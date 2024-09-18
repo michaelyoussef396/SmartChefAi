@@ -12,8 +12,7 @@ from models import User, Recipe, Ingredient, Category  # Import models
 from parsers import parse_recipe_from_url 
 # Initialize Bcrypt
 bcrypt = Bcrypt(app)
-UPLOAD_FOLDER = 'static/images'  # Define the upload folder
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
 # Views go here!
 
 @app.route("/register", methods=["POST"])
@@ -81,7 +80,6 @@ def create_recipe():
     instructions = data.getlist("instructions")  # Expecting instructions to be a list
     categories = data.get("categories", "").split(",")  # Assuming categories are comma-separated
     ingredients = []
-    image = request.files.get("image")
 
     # Process ingredients from the form
     for key in request.form:
@@ -171,16 +169,10 @@ def get_recipe(recipe_id):
     try:
         recipe = Recipe.query.get(recipe_id)
         if not recipe:
+            
             return jsonify({"error": "Recipe not found."}), 404
 
-        return jsonify({
-            "id": recipe.id,
-            "title": recipe.title,
-            "description": recipe.description,
-            "instructions": recipe.instructions,
-            "ingredients": [{"name": ing.name, "quantity": ing.quantity} for ing in recipe.ingredients],
-            "categories": [cat.name for cat in recipe.categories]
-        }), 200
+        return recipe.to_dict()
     except Exception as e:
         print(f"Error: {e}")
         return jsonify({"error": "An error occurred while retrieving the recipe."}), 500
@@ -335,61 +327,6 @@ def parse_recipe():
     if not url:
         return jsonify({"error": "URL is required"}), 400
 
-    recipe_data = parse_recipe_from_url(url)
-
-    if not recipe_data:
-        return jsonify({"error": "Failed to parse recipe from URL"}), 500
-
-    try:
-        # Create and save the new recipe in the database
-        new_recipe = Recipe(
-            title=recipe_data["title"],
-            description=recipe_data["description"],
-            instructions=recipe_data["instructions"]
-        )
-        db.session.add(new_recipe)
-        db.session.commit()
-
-        # Add ingredients to the recipe
-        for ingredient_data in recipe_data["ingredients"]:
-            ingredient = Ingredient(
-                name=ingredient_data["name"],
-                quantity=ingredient_data.get("quantity", ""),
-                recipe_id=new_recipe.id
-            )
-            db.session.add(ingredient)
-
-        db.session.commit()
-
-        # Create or get categories and associate with the recipe
-        for category_name in recipe_data["categories"]:
-            category = Category.query.filter_by(name=category_name).first()
-            if not category:
-                category = Category(name=category_name)
-                db.session.add(category)
-            new_recipe.categories.append(category)
-
-        db.session.commit()
-
-        return jsonify({
-            "id": new_recipe.id,
-            "title": new_recipe.title,
-            "description": new_recipe.description,
-            "instructions": new_recipe.instructions,
-            "ingredients": [{"name": ing.name, "quantity": ing.quantity} for ing in new_recipe.ingredients],
-            "categories": [cat.name for cat in new_recipe.categories]
-        }), 201
-
-    except Exception as e:
-        db.session.rollback()
-        print(f"Error: {e}")
-        return jsonify({"error": "An error occurred while saving the recipe"}), 500
-    data = request.json
-    url = data.get("url")
-
-    if not url:
-        return jsonify({"error": "URL is required"}), 400
-
     # Use the parser to extract recipe data from the URL
     recipe_data = parse_recipe_from_url(url)
 
@@ -417,10 +354,7 @@ def parse_recipe():
 
         db.session.commit()
 
-        # Assuming categories are included in the recipe_data or inferred
-        # Create or get categories (if necessary)
-        # Here we need to adapt based on how you want to infer or provide categories
-        # For example:
+        # Process categories
         categories = []  # List of categories to add to the recipe
         for category_name in recipe_data.get("categories", []):
             category = Category.query.filter_by(name=category_name).first()
@@ -441,7 +375,8 @@ def parse_recipe():
             "title": new_recipe.title,
             "description": new_recipe.description,
             "instructions": new_recipe.instructions,
-            "ingredients": [{"name": ing.name, "quantity": ing.quantity} for ing in new_recipe.ingredients]
+            "ingredients": [{"name": ing.name, "quantity": ing.quantity} for ing in new_recipe.ingredients],
+            "categories": [cat.name for cat in new_recipe.categories]
         }), 201
 
     except Exception as e:
@@ -449,51 +384,6 @@ def parse_recipe():
         print(f"Error: {e}")
         return jsonify({"error": "An error occurred while saving the recipe"}), 500
 
-    data = request.json
-    url = data.get("url")
-
-    if not url:
-        return jsonify({"error": "URL is required"}), 400
-
-    # Use the parser to extract recipe data from the URL
-    recipe_data = parse_recipe_from_url(url)
-
-    if not recipe_data:
-        return jsonify({"error": "Failed to parse recipe from URL"}), 500
-
-    try:
-        # Create and save the new recipe in the database
-        new_recipe = Recipe(
-            title=recipe_data["title"],
-            description=recipe_data["description"],
-            instructions=recipe_data["instructions"]
-        )
-        db.session.add(new_recipe)
-        db.session.commit()
-
-        # Add ingredients to the recipe
-        for ingredient_data in recipe_data["ingredients"]:
-            ingredient = Ingredient(
-                name=ingredient_data["name"],
-                quantity=ingredient_data.get("quantity", ""),
-                recipe_id=new_recipe.id
-            )
-            db.session.add(ingredient)
-        db.session.commit()
-
-        # Return the created recipe
-        return jsonify({
-            "id": new_recipe.id,
-            "title": new_recipe.title,
-            "description": new_recipe.description,
-            "instructions": new_recipe.instructions,
-            "ingredients": [{"name": ing.name, "quantity": ing.quantity} for ing in new_recipe.ingredients]
-        }), 201
-
-    except Exception as e:
-        db.session.rollback()
-        print(f"Error: {e}")
-        return jsonify({"error": "An error occurred while saving the recipe"}), 500
 @app.route('/')
 def index():
     return '<h1>Project Server</h1>'
